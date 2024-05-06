@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
                             // Tasques a la interfície gràfica (GUI)
                             TextView tv = findViewById(R.id.textView);
                             tv.setText(data);
+
+                            Toast.makeText(MainActivity.this,
+                                    "IP actualitzada",Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
