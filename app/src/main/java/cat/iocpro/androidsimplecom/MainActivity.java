@@ -2,9 +2,14 @@ package cat.iocpro.androidsimplecom;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.ProxyInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.concurrent.ExecutorService;
@@ -23,22 +30,48 @@ import java.util.concurrent.Executors;
 import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
+    String error = ""; // string field
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button b = findViewById(R.id.button);
-
-        b.setOnClickListener((View v) -> {
+        Button buttonWithProxy = findViewById(R.id.buttonProxy);
+        buttonWithProxy.setOnClickListener((View v) -> {
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     // Tasques en background (xarxa)
-                    String data = getDataFromUrl("https://api.myip.com");
+                    String data = getDataFromUrl("https://api.myip.com",false);
+
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Tasques a la interfície gràfica (GUI)
+                            TextView tv = findViewById(R.id.textView);
+                            tv.setText(data);
+
+                            Toast.makeText(MainActivity.this,
+                                    "IP actualitzada",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+        });
+
+        Button buttonNoProxy = findViewById(R.id.buttonNoProxy);
+        buttonNoProxy.setOnClickListener((View v) -> {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    // Tasques en background (xarxa)
+                    String data = getDataFromUrl("https://api.myip.com",true);
 
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.post(new Runnable() {
@@ -57,16 +90,44 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    String error = ""; // string field
-    private String getDataFromUrl(String demoIdUrl) {
 
-        String result = null;
+    private String getDataFromUrl(String demoIdUrl, boolean proxified) {
+
+        String result = "SENSE PROXY: ";
         int resCode;
         InputStream in;
         try {
             URL url = new URL(demoIdUrl);
             URLConnection urlConn = url.openConnection();
 
+            // Proxy
+            if( proxified ) {
+                try {
+                    ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(
+                            Context.CONNECTIVITY_SERVICE);
+                    Network activeNetwork = connectivityManager.getActiveNetwork();
+                    ProxyInfo proxyInfo = connectivityManager.getDefaultProxy();
+
+                    if (proxyInfo != null) {
+                        String proxyHost = proxyInfo.getHost();
+                        int proxyPort = proxyInfo.getPort();
+                        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
+                        urlConn = (HttpURLConnection) url.openConnection(proxy);
+                        Log.v("HTTPS","Configurant proxy a "+proxyHost+" port="+proxyPort);
+                        urlConn = url.openConnection(proxy);
+                        result = "AMB PROXY: ";
+                    } else {
+                        Log.e("PROXY","No es pot aconseguir la informació de proxy del sistema.");
+                        return "AMB PROXY: No es pot aconseguir la informació de proxy del sistema.";
+                    }
+                } catch (Exception e) {
+                    Log.e("HTTPS","No s'ha pogut utilitzar el Proxy");
+                    e.printStackTrace();
+                    return "ERROR: no s'ha pogut utiltizar el Proxy. Configura primer el proxy a la connexió de xarxa i torna a provar.";
+                }
+            }
+
+            // Petició HTTPS
             HttpsURLConnection httpsConn = (HttpsURLConnection) urlConn;
             httpsConn.setAllowUserInteraction(false);
             httpsConn.setInstanceFollowRedirects(true);
@@ -85,12 +146,13 @@ public class MainActivity extends AppCompatActivity {
                     sb.append(line).append("\n");
                 }
                 in.close();
-                result = sb.toString();
+                result += sb.toString();
             } else {
                 error += resCode;
             }
         } catch (IOException e) {
             e.printStackTrace();
+            result += e.toString();
         }
         return result;
     }
