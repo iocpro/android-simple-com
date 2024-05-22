@@ -8,8 +8,8 @@
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="323dp"
-        android:layout_height="125dp"
+        android:layout_width="351dp"
+        android:layout_height="175dp"
         android:gravity="center|center_vertical"
         android:text="Cerca la IP..."
         android:textSize="20sp"
@@ -21,24 +21,35 @@
         app:layout_constraintVertical_bias="0.122" />
 
     <Button
-        android:id="@+id/buttonProxy"
+        android:id="@+id/buttonHttps"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="72dp"
-        android:text="Crida HTTPS sense proxy"
+        android:layout_marginTop="40dp"
+        android:text="Crida HTTPS"
+        app:layout_constraintBottom_toTopOf="@+id/proxyCheckbox"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintVertical_bias="0.029" />
 
-    <Button
-        android:id="@+id/buttonNoProxy"
+    <CheckBox
+        android:id="@+id/proxyCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Crida HTTPS amb proxy"
+        android:layout_marginBottom="44dp"
+        android:text="Proxy"
+        app:layout_constraintBottom_toTopOf="@+id/trustCaCheckbox"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <CheckBox
+        android:id="@+id/trustCaCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="220dp"
+        android:text="Confiar en CA personalitzada"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonProxy"
-        app:layout_constraintVertical_bias="0.202" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
